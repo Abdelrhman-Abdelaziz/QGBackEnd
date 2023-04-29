@@ -51,8 +51,9 @@ class QGen:
     def predict_mcq(self, payload,n_ques,n_mcq):
         keywords = self.get_nouns_multipartite(payload)
         keywords = distrctors.filter_keywords(keywords,self.s2v)
-
+        
         sent_kekword_map = keyword_sentence_map(payload,keywords)
+        random.shuffle(sent_kekword_map)
         n = min(n_ques,len(sent_kekword_map.keys()))
         questions = []
         keys = list(sent_kekword_map)
