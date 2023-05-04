@@ -57,7 +57,7 @@ def getquestions(request: QuestionRequest):
 def getFillBlank(request: sentenceQuestionRequest):
     keywords = qg.get_nouns_multipartite(request.sentence)
     keywords = distrctors.filter_keywords(keywords, qg.s2v)
-    if len(keywords) > 0:
+    if len(keywords) == 0:
         raise HTTPException(status_code=400, detail="Can't Make question")
     random.shuffle(keywords)
     answer = keywords[0]
