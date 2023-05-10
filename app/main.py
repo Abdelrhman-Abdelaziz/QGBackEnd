@@ -67,4 +67,4 @@ def getFillBlank(request: sentenceQuestionRequest):
 #     mcq.append(answer)
     random.shuffle(mcq)
 
-    return sentenceQuestionResponse(question= question, mcq= mcq ,answer= answer)
+    return sentenceQuestionResponse(question= question, mcq= mcq ,answer= answer.capitalize())
