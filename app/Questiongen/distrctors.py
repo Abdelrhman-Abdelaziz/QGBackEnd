@@ -86,10 +86,10 @@ def get_distractors (word,origsentence,sense2vecmodel,sentencemodel,top_n,lambda
   # filtered_keywords = filtered_keywords[1:]
   final = [word.capitalize()]
   for wrd in filtered_keywords:
-    if wrd.lower() !=word.lower():
+    if wrd.lower() != word.lower() and word.lower() not in [string.lower() for string in wrd.split(" ")]:
       final.append(wrd.capitalize())
   return final
 
 def filter_keywords(keywords,s2v):
-  retKeywords = [x for x in keywords if len(sense2vec_get_words(x,s2v,10,"")) > 5]
+  retKeywords = [x for x in keywords if len(sense2vec_get_words(x,s2v,10,"")) > 4]
   return retKeywords
