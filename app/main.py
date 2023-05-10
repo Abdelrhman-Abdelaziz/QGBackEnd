@@ -62,9 +62,9 @@ def getFillBlank(request: sentenceQuestionRequest):
     random.shuffle(keywords)
     answer = keywords[0]
     question = request.sentence.replace(answer, " ....... ")
-    mcq = distrctors.get_distractors(answer,question,qg.s2v,qg.s_t_model,30,0.2)[:3]
+    mcq = distrctors.get_distractors(answer,question,qg.s2v,qg.s_t_model,30,0.2)[:4]
 
-    mcq.append(answer)
+#     mcq.append(answer)
     random.shuffle(mcq)
 
     return sentenceQuestionResponse(question= question, mcq= mcq ,answer= answer)
