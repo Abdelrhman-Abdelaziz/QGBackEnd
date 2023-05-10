@@ -72,7 +72,7 @@ class QGen:
             extractor = pke.unsupervised.MultipartiteRank()
             extractor.load_document(input=content,language='en')
             #    not contain punctuation marks or stopwords as candidates.
-            pos = {'PROPN','NOUN'}
+            pos = {'PROPN','NOUN',"VERB"}
             #pos = {'PROPN','NOUN'}
             stoplist = list(string.punctuation)
             stoplist += ['-lrb-', '-rrb-', '-lcb-', '-rcb-', '-lsb-', '-rsb-']
