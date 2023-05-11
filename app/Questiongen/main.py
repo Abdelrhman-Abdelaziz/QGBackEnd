@@ -3,8 +3,10 @@ import nltk
 from flashtext import KeywordProcessor
 import nltk
 from nltk.tokenize import sent_tokenize
+from nltk import FreqDist
 nltk.download('punkt')
 nltk.download('stopwords')
+from nltk.corpus import brown
 from nltk.corpus import stopwords
 import string
 import pke
@@ -21,7 +23,7 @@ from Questiongen import distrctors
 class QGen:
     
     def __init__(self):
-        trained_model_path = './t5_squad_v1/'
+        trained_model_path = 't5_squad_v1'
         pretrained_model_name = Path(trained_model_path).stem
         encoder_path = os.path.join(trained_model_path,f"{pretrained_model_name}-encoder-quantized.onnx")
         decoder_path = os.path.join(trained_model_path,f"{pretrained_model_name}-decoder-quantized.onnx")
@@ -35,7 +37,7 @@ class QGen:
         
         self.tokenizer = tokenizer
         self.model = model
-
+        self.fdist = FreqDist(brown.words())
         self.set_seed(42)
         
         self.s2v = Sense2Vec().from_disk('s2v_old')
@@ -50,18 +52,18 @@ class QGen:
             
     def predict_mcq(self, payload,n_ques,n_mcq):
         keywords = self.get_nouns_multipartite(payload)
-        keywords = distrctors.filter_keywords(keywords,self.s2v)
+    
+        keywords = distrctors.filter_keywords(keywords,self.s2v,self.fdist)
 #         random.shuffle(keywords)
         sent_kekword_map = keyword_sentence_map(payload,keywords)
-        
         n = min(n_ques,len(sent_kekword_map.keys()))
         questions = []
         keys = list(sent_kekword_map)
         for i in range(n):
             question = self.get_question(sent_kekword_map[keys[i]],keys[i])
-            mcq = distrctors.get_distractors(keywords[i],question,self.s2v,self.s_t_model,40,0.2)[:n_mcq]
+            mcq = distrctors.get_distractors(keys[i],question,self.s2v,self.s_t_model,40,0.2)[:n_mcq]
             random.shuffle(mcq)
-            questions.append({'question':question,'mcq':mcq,'answer':keywords[i].capitalize()})
+            questions.append({'question':question,'mcq':mcq,'answer':keys[i].capitalize()})
 
         return questions
             
@@ -69,15 +71,12 @@ class QGen:
     def get_nouns_multipartite(self,content):
         out=[]
         try:
+
             extractor = pke.unsupervised.MultipartiteRank()
             extractor.load_document(input=content,language='en')
             #    not contain punctuation marks or stopwords as candidates.
-            pos = {'PROPN','NOUN'}
-            #pos = {'PROPN','NOUN'}
-            stoplist = list(string.punctuation)
-            stoplist += ['-lrb-', '-rrb-', '-lcb-', '-rcb-', '-lsb-', '-rsb-']
-            stoplist += stopwords.words('english')
-            # extractor.candidate_selection(pos=pos, stoplist=stoplist)
+            pos = {'PROPN',"NOUN"}
+            # pos = {'NOUN'}
             extractor.candidate_selection(pos=pos)
             # 4. build the Multipartite graph and rank candidates using random walk,
             #    alpha controls the weight adjustment mechanism, see TopicRank for
@@ -86,15 +85,54 @@ class QGen:
                                         threshold=0.75,
                                         method='average')
             keyphrases = extractor.get_n_best(n=15)
+
+
+            extractor = pke.unsupervised.PositionRank()
+            extractor.load_document(input=content,language='en')
+            #    not contain punctuation marks or stopwords as candidates.
+            pos = {'NOUN', 'PROPN', 'ADJ'}
+            grammar = "NP: {<ADJ>*<NOUN|PROPN>+}"
+            #pos = {'PROPN','NOUN'}
+            extractor.candidate_selection(grammar=grammar)
+            # 4. build the Multipartite graph and rank candidates using random walk,
+            #    alpha controls the weight adjustment mechanism, see TopicRank for
+            #    threshold/method parameters.
+            extractor.candidate_weighting(pos=pos)
+            keyphrases += extractor.get_n_best(n=15)
+
+            for val in keyphrases:
+                if val[0] not in out:
+                    out.append(val[0])
+        except:
+            out = []
+            traceback.print_exc()
+
+        return out
+    
+    def get_nouns_multipartite2(self,content):
+        out=[]
+        try:
+            extractor = pke.unsupervised.PositionRank()
+            extractor.load_document(input=content,language='en')
+            #    not contain punctuation marks or stopwords as candidates.
+            pos = {'NOUN', 'PROPN', 'ADJ'}
+            grammar = "NP: {<ADJ>*<NOUN|PROPN>+}"
+            #pos = {'PROPN','NOUN'}
+            extractor.candidate_selection(grammar=grammar)
+            # 4. build the Multipartite graph and rank candidates using random walk,
+            #    alpha controls the weight adjustment mechanism, see TopicRank for
+            #    threshold/method parameters.
+            extractor.candidate_weighting(pos=pos)
+            keyphrases = extractor.get_n_best(n=15)
             
 
             for val in keyphrases:
                 out.append(val[0])
         except:
             out = []
-            traceback.print_exc()
 
         return out
+
     def get_question(self,sentence,answer):
         text = "context: {} answer: {}".format(sentence,answer)
         print (text)

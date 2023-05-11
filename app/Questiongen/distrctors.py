@@ -1,5 +1,6 @@
 from similarity.normalized_levenshtein import NormalizedLevenshtein
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
 import numpy as np
 
 normalized_levenshtein = NormalizedLevenshtein()
@@ -16,18 +17,45 @@ def get_highest_similarity_score(wordlist,wrd):
   for each in wordlist:
     score.append(normalized_levenshtein.similarity(each.lower(),wrd.lower()))
   return max(score)
+def get_distractors_from_internet(word):
+    url = "https://sense2vec.prod.demos.explosion.services/find"
+    data = {
+        "model": "2019",
+        "sense": "auto",
+        "word": word
+    }
 
+    response = requests.post(url, json=data)
+
+    if response.status_code == 200:
+        # Request successful
+        result = response.json()
+        # Process the result
+        dis = [x["text"] for x in result["results"]]
+        return dis
+    else:
+        # Request failed
+        return None
+def sense2vec_get_words_check(word,s2v):
+    sense = s2v.get_best_sense(word)
+    if sense is not None:
+      return True
+    else:
+      return len(get_distractors_from_internet(word)) > 3
+    
 def sense2vec_get_words(word,s2v,topn,question):
     output = []
-    # print ("word ",word)
-    try:
-      sense = s2v.get_best_sense(word, senses= ["NOUN", "PERSON","PRODUCT","LOC","ORG","EVENT","NORP","WORK OF ART","FAC","GPE","NUM","FACILITY"])
-      most_similar = s2v.most_similar(sense, n=topn)
-    #   print (most_similar)
-      output = filter_same_sense_words(most_similar)
-      # print ("Similar ",output)
-    except:
-      output =[]
+    output = get_distractors_from_internet(word)
+    if(output == None):
+      # print ("word ",word)
+      try:
+        sense = s2v.get_best_sense(word, senses= ["NOUN", "PERSON","PRODUCT","LOC","ORG","EVENT","NORP","WORK OF ART","FAC","GPE","NUM","FACILITY"])
+        most_similar = s2v.most_similar(sense, n=topn)
+      #   print (most_similar)
+        output = filter_same_sense_words(most_similar)
+        # print ("Similar ",output)
+      except:
+        output =[]
 
     threshold = 0.6
     final=[word]
@@ -81,7 +109,7 @@ def get_distractors (word,origsentence,sense2vecmodel,sentencemodel,top_n,lambda
   distractor_embeddings = sentencemodel.encode(distractors_new)
 
   # filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors,4,0.7)
-  max_keywords = min(len(distractors_new),20)
+  max_keywords = min(len(distractors_new),10)
   filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors_new,max_keywords,lambdaval)
   # filtered_keywords = filtered_keywords[1:]
   final = [word.capitalize()]
@@ -90,6 +118,7 @@ def get_distractors (word,origsentence,sense2vecmodel,sentencemodel,top_n,lambda
       final.append(wrd.capitalize())
   return final
 
-def filter_keywords(keywords,s2v):
-  retKeywords = [x for x in keywords if len(sense2vec_get_words(x,s2v,10,"")) > 4]
+def filter_keywords(keywords,s2v,fdist):
+  retKeywords = [x for x in keywords if sense2vec_get_words_check(x,s2v) ]
+  retKeywords = sorted(retKeywords, key=lambda x: fdist[x])
   return retKeywords
