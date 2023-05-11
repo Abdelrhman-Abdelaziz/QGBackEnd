@@ -6,6 +6,7 @@ from nltk.tokenize import sent_tokenize
 from nltk import FreqDist
 nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('brown')
 from nltk.corpus import brown
 from nltk.corpus import stopwords
 import string
