@@ -51,7 +51,7 @@ class QGen:
     def predict_mcq(self, payload,n_ques,n_mcq):
         keywords = self.get_nouns_multipartite(payload)
         keywords = distrctors.filter_keywords(keywords,self.s2v)
-        random.shuffle(keywords)
+#         random.shuffle(keywords)
         sent_kekword_map = keyword_sentence_map(payload,keywords)
         
         n = min(n_ques,len(sent_kekword_map.keys()))
@@ -72,7 +72,7 @@ class QGen:
             extractor = pke.unsupervised.MultipartiteRank()
             extractor.load_document(input=content,language='en')
             #    not contain punctuation marks or stopwords as candidates.
-            pos = {'PROPN','NOUN',"VERB"}
+            pos = {'PROPN','NOUN'}
             #pos = {'PROPN','NOUN'}
             stoplist = list(string.punctuation)
             stoplist += ['-lrb-', '-rrb-', '-lcb-', '-rcb-', '-lsb-', '-rsb-']
