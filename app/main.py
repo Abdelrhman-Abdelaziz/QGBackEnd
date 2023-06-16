@@ -56,7 +56,7 @@ def getquestions(request: QuestionRequest):
 @app.post("/fillBlank", response_model=sentenceQuestionResponse)
 def getFillBlank(request: sentenceQuestionRequest):
     keywords = qg.get_nouns_multipartite(request.sentence)
-    keywords = distrctors.filter_keywords(keywords, qg.s2v)
+    keywords = distrctors.filter_keywords2(keywords, qg.s2v)
     if len(keywords) == 0:
         raise HTTPException(status_code=400, detail="Can't Make question")
     random.shuffle(keywords)
