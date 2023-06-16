@@ -122,3 +122,7 @@ def filter_keywords(keywords,s2v,fdist):
   retKeywords = [x for x in keywords if sense2vec_get_words_check(x,s2v) ]
   retKeywords = sorted(retKeywords, key=lambda x: fdist[x])
   return retKeywords
+
+def filter_keywords2(keywords,s2v):
+  retKeywords = [x for x in keywords if sense2vec_get_words_check(x,s2v) ]
+  return retKeywords
