@@ -12,3 +12,4 @@ strsim==0.0.3
 sense2vec==2.0.0
 sentence-transformers
 flashtext
+better_profanity

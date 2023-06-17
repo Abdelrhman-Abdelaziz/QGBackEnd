@@ -2,6 +2,7 @@ from similarity.normalized_levenshtein import NormalizedLevenshtein
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
 import numpy as np
+import better_profanity
 
 normalized_levenshtein = NormalizedLevenshtein()
 
@@ -99,23 +100,27 @@ def get_distractors (word,origsentence,sense2vecmodel,sentencemodel,top_n,lambda
   # print ("distractors ",distractors)
   if len(distractors) ==0:
     return distractors
-  distractors_new = [word.capitalize()]
-  distractors_new.extend(distractors)
-  # print ("distractors_new .. ",distractors_new)
+  # distractors_new = [word.capitalize()]
+  # distractors_new.extend(distractors)
+  # # print ("distractors_new .. ",distractors_new)
 
-  embedding_sentence = origsentence+ " "+word.capitalize()
-  # embedding_sentence = word
-  keyword_embedding = sentencemodel.encode([embedding_sentence])
-  distractor_embeddings = sentencemodel.encode(distractors_new)
+  # embedding_sentence = origsentence+ " "+word.capitalize()
+  # # embedding_sentence = word
+  # keyword_embedding = sentencemodel.encode([embedding_sentence])
+  # distractor_embeddings = sentencemodel.encode(distractors_new)
 
-  # filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors,4,0.7)
-  max_keywords = min(len(distractors_new),10)
-  filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors_new,max_keywords,lambdaval)
-  # filtered_keywords = filtered_keywords[1:]
+  # # filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors,4,0.7)
+  # max_keywords = min(len(distractors_new),10)
+  # filtered_keywords = mmr(keyword_embedding, distractor_embeddings,distractors_new,max_keywords,lambdaval)
+  # # filtered_keywords = filtered_keywords[1:]
+  filtered_keywords = distractors
   final = [word.capitalize()]
   for wrd in filtered_keywords:
     if wrd.lower() != word.lower() and word.lower() not in [string.lower() for string in wrd.split(" ")]:
       final.append(wrd.capitalize())
+  
+  # filter bad words
+  final = [i for i in final if not(better_profanity.profanity.contains_profanity(i))]
   return final
 
 def filter_keywords(keywords,s2v,fdist):
