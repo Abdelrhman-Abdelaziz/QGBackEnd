@@ -36,6 +36,14 @@ class sentenceQuestionResponse(BaseModel):
     mcq: list
     answer: str
 
+class distractorsRequest(BaseModel):
+    word: str
+    n:int
+
+
+class distractorsResponse(BaseModel):
+    distractors:[]
+
 
 @app.get('/')
 def index():
@@ -68,3 +76,12 @@ def getFillBlank(request: sentenceQuestionRequest):
     random.shuffle(mcq)
 
     return sentenceQuestionResponse(question= question, mcq= mcq ,answer= answer.capitalize())
+
+
+@app.post("/distractors", response_model=distractorsResponse)
+def getDistractors(request: distractorsRequest):
+    word = request.word
+    n = request.n
+    mcq = distrctors.get_distractors(answer,question,qg.s2v,qg.s_t_model,30,0.2)[:n]
+
+    return distractorsResponse(distrctors=mcq)
