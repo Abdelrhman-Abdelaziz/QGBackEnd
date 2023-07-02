@@ -42,7 +42,7 @@ class distractorsRequest(BaseModel):
 
 
 class distractorsResponse(BaseModel):
-    distractors:[]
+    distractors:list
 
 
 @app.get('/')
