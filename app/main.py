@@ -84,4 +84,4 @@ def getDistractors(request: distractorsRequest):
     n = request.n
     mcq = distrctors.get_distractors(word,"",qg.s2v,qg.s_t_model,30,0.2)[:n]
 
-    return distractorsResponse(distrctors=mcq)
+    return distractorsResponse(distractors=mcq)
