@@ -82,6 +82,6 @@ def getFillBlank(request: sentenceQuestionRequest):
 def getDistractors(request: distractorsRequest):
     word = request.word
     n = request.n
-    mcq = distrctors.get_distractors(answer,question,qg.s2v,qg.s_t_model,30,0.2)[:n]
+    mcq = distrctors.get_distractors(word,"",qg.s2v,qg.s_t_model,30,0.2)[:n]
 
     return distractorsResponse(distrctors=mcq)
